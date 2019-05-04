@@ -25,6 +25,12 @@ from keras.losses import categorical_crossentropy
 from keras.optimizers import SGD
 from keras.applications.vgg16 import VGG16
 
+import tensorflow as tflow
+sess = tflow.Session(config=tflow.ConfigProto(log_device_placement=True))
+
+# Check that there is an output
+from keras import backend as k
+k.tensorflow_backend._get_available_gpus()
 
 def get_model_3(input_shape, model_case):
     """Creates the RNN model 
