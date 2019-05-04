@@ -2,7 +2,9 @@
 """
 Created on Sat Apr 27 16:36:38 2019
 
-@author: Ali Gohar
+@author: Ali Gohar (281668)
+        Vladimir Vashchenko (281802)
+        Vishal Gaur (281683)
 """
 
 #!/usr/bin/env python
