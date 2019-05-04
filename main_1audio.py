@@ -11,6 +11,7 @@ Created on Sat Apr 27 16:36:38 2019
 # imports
 from __future__ import print_function
 import numpy as np
+import os
 from scipy import signal
 import tf_transform as tf
 from ex5_Part_2_utils import mask_calc, visualize_audio, evaluate_results, \
@@ -69,17 +70,60 @@ audio_drums = 'drums.wav'
 audio_others = 'other.wav'
 audio_mixture = 'mixture.wav'
 
-#load audio files
-vocals, fs = load_audio(audio_vocal)
-bass, fs = load_audio(audio_bass)
-drums, fs = load_audio(audio_drums)
-other, fs = load_audio(audio_others)
-mixture, fs = load_audio(audio_mixture)
-all_other = (drums + bass + other)
-#converet into one channel
-all_other = all_other.mean(1)
-vocals = vocals.mean(1)
-mixture = mixture.mean(1)
+train_dataset_path = '/Users/stiflerbox/PycharmProjects/AdvancedAudioProcessing/project_work/DSD100/Sources/Dev'
+song_folders_train = os.listdir(path=train_dataset_path)
+song_folders_train.sort()
+
+full_dataset_train_other = np.array([])
+full_dataset_train_vocal = np.array([])
+number_of_files = 10
+count = 1
+for song_folder in song_folders_train:
+    bass, fs = load_audio(os.path.join(train_dataset_path, song_folder, audio_bass))
+    drums, fs = load_audio(os.path.join(train_dataset_path, song_folder, audio_drums))
+    other, fs = load_audio(os.path.join(train_dataset_path, song_folder, audio_others))
+    all_other = (bass + drums + other)/3 # adding sources and preserving the energy of the signal
+    all_other = all_other.mean(1) # averaging between two channels
+
+    vocals, fs = load_audio(os.path.join(train_dataset_path, song_folder, audio_vocal))
+    vocals = vocals.mean(1)
+
+    full_dataset_train_other = np.concatenate((full_dataset_train_other, all_other), axis=None)
+    full_dataset_train_vocal = np.concatenate((full_dataset_train_vocal, vocals), axis=None)
+    if (count < number_of_files):
+        break
+    count += 1
+
+full_dataset_train_mixture = (full_dataset_train_vocal + full_dataset_train_other)/2
+
+
+test_dataset_path = '/Users/stiflerbox/PycharmProjects/AdvancedAudioProcessing/project_work/DSD100/Mixtures/Test'
+song_folders_test = os.listdir(path=test_dataset_path)
+song_folders_test.sort()
+
+full_dataset_test_mixture = np.array([])
+count = 1
+for song_folder in song_folders_test:
+    mixture, fs = load_audio(os.path.join(test_dataset_path, song_folder, audio_mixture))
+    mixture = mixture.mean(1)
+
+    full_dataset_test_mixture = np.concatenate((full_dataset_test_mixture, mixture), axis=None)
+
+    if (count < number_of_files):
+        break
+    count += 1
+
+# #load audio files
+# vocals, fs = load_audio(audio_vocal)
+# bass, fs = load_audio(audio_bass)
+# drums, fs = load_audio(audio_drums)
+# other, fs = load_audio(audio_others)
+# mixture, fs = load_audio(audio_mixture)
+# all_other = (drums + bass + other)
+# #converet into one channel
+# all_other = all_other.mean(1)
+# vocals = vocals.mean(1)
+# mixture = mixture.mean(1)
 
  # STFT parameters
 win_size = 1024 
@@ -88,13 +132,16 @@ hop = 512
 windowing_func = signal.hamming(win_size)
 
 # STFT of the music
-all_other_mag, mix_phase = tf.stft(all_other, windowing_func, fft_size, hop)
+#all_other_mag, mix_phase = tf.stft(all_other, windowing_func, fft_size, hop)
+all_other_mag, mix_phase = tf.stft(full_dataset_train_other, windowing_func, fft_size, hop)
 
 # STFT of the mixture
-mixture_mag, mix_phase = tf.stft(mixture, windowing_func, fft_size, hop)
+# mixture_mag, mix_phase = tf.stft(mixture, windowing_func, fft_size, hop)
+mixture_mag, mix_phase = tf.stft(full_dataset_test_mixture, windowing_func, fft_size, hop)
 
 # Compute the magnitudes of isolated sources
-vocals_mag, vocals_phase = tf.stft(vocals, windowing_func, fft_size, hop)
+# vocals_mag, vocals_phase = tf.stft(vocals, windowing_func, fft_size, hop)
+vocals_mag, vocals_phase = tf.stft(full_dataset_train_vocal, windowing_func, fft_size, hop)
 
 exponent = 0.7
 smoothness = 1
