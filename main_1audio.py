@@ -3,6 +3,8 @@
 Created on Sat Apr 27 16:36:38 2019
 
 @author: Ali Gohar
+        Vladimir Vashchenko
+        Vishal Gaur
 """
 
 #!/usr/bin/env python
