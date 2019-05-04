@@ -71,6 +71,7 @@ audio_others = 'other.wav'
 audio_mixture = 'mixture.wav'
 
 train_dataset_path = '/Users/stiflerbox/PycharmProjects/AdvancedAudioProcessing/project_work/DSD100/Sources/Dev'
+#train_dataset_path = '../../Downloads/DSD100/DSD100/Sources/Dev'
 song_folders_train = os.listdir(path=train_dataset_path)
 song_folders_train.sort()
 
@@ -90,7 +91,7 @@ for song_folder in song_folders_train:
 
     full_dataset_train_other = np.concatenate((full_dataset_train_other, all_other), axis=None)
     full_dataset_train_vocal = np.concatenate((full_dataset_train_vocal, vocals), axis=None)
-    if (count < number_of_files):
+    if (count == number_of_files):
         break
     count += 1
 
@@ -98,6 +99,7 @@ full_dataset_train_mixture = (full_dataset_train_vocal + full_dataset_train_othe
 
 
 test_dataset_path = '/Users/stiflerbox/PycharmProjects/AdvancedAudioProcessing/project_work/DSD100/Mixtures/Test'
+#test_dataset_path = '../../Downloads/DSD100/DSD100/Mixtures/Test'
 song_folders_test = os.listdir(path=test_dataset_path)
 song_folders_test.sort()
 
@@ -108,8 +110,7 @@ for song_folder in song_folders_test:
     mixture = mixture.mean(1)
 
     full_dataset_test_mixture = np.concatenate((full_dataset_test_mixture, mixture), axis=None)
-
-    if (count < number_of_files):
+    if (count == number_of_files):
         break
     count += 1
 
