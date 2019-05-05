@@ -58,12 +58,14 @@ def get_model_3(input_shape, model_case):
 #    )
 
     return model
-
+#path of data for training and testing
 Train_data_path = './DSD100/DSD100/Sources/Dev'
 Test_data_path = './DSD100/DSD100/Mixtures/Test'
+
 all_train_other = np.zeros((1,2))
 all_train_vocal = np.zeros((1,2))
 all_test_mixture = np.zeros((1,2))
+
 #test_data_path = 
 audio_vocal = 'vocals.wav'
 audio_bass = 'bass.wav'
@@ -87,8 +89,8 @@ for filename in os.listdir(Train_data_path):
 
 #load mixture audio files for testing
 for filename in os.listdir(Test_data_path):
-    audio_files = os.path.join(Train_data_path,filename,audio_mixture)
-    mixture, fs = load_audio(audio_mixture)
+    audio_files = os.path.join(Test_data_path,filename,audio_mixture)
+    mixture, fs = load_audio(audio_files)
     all_test_mixture = np.concatenate((all_test_mixture, mixture),0)
 
 all_train_mixture = all_train_other + all_train_vocal 
@@ -110,17 +112,18 @@ train_other_mag, mix_phase = tf.stft(all_train_other, windowing_func, fft_size, 
 
 # STFT of the mixture
 train_mixture_mag, mix_phase = tf.stft(all_train_mixture, windowing_func, fft_size, hop)
-test_mixture_mag, mix_phase = tf.stft(all_test_mixture,  windowing_func, fft_size, hop)
+test_mixture_mag, mix_test_phase = tf.stft(all_test_mixture,  windowing_func, fft_size, hop)
 
 # Compute the magnitudes of vocal sources
 train_vocals_mag, vocals_phase = tf.stft(all_train_vocal, windowing_func, fft_size, hop)
 
-#exponent = 0.7
-#smoothness = 1
-#model_case_2 = 'mask prediction'
-#
-## Estimate the mask using IRM equation
-#calculated_mask = mask_calc(vocals_mag, all_other_mag, exponent, smoothness)
+#IRM Mask parameters
+exponent = 0.7
+smoothness = 1
+model_case_2 = 'mask prediction'
+
+# Estimate the mask using IRM equation
+calculated_mask = mask_calc(train_vocals_mag, train_other_mag, exponent, smoothness)
 #
 ##split Data into train and test
 #data_split = int(len(mixture_mag) * 0.5)
@@ -129,33 +132,33 @@ train_vocals_mag, vocals_phase = tf.stft(all_train_vocal, windowing_func, fft_si
 #train_mix_mag = mixture_mag[0:data_split]
 #test_mix_mag =  mixture_mag[data_split:(data_split *2)]
 #
-## Mask calculate
-#train_vocals_mag_irm = train_calcu_mask * train_mix_mag
-#train_vocals_irm = tf.i_stft(train_vocals_mag_irm, mix_phase, win_size, hop)
-#save_audio('{} using irm.wav'.format(model_case_2), train_vocals_irm, fs)
-#
-#model_2 = get_model_3(
-#    input_shape=train_mix_mag.shape,
-#    model_case=model_case_2
-#)
-#model_2.compile(optimizer = 'adam',loss='binary_crossentropy' )
-#model_2.fit(
-#    x=train_mix_mag.reshape((1, ) + train_mix_mag.shape),
-#    y=train_calcu_mask.reshape((1, ) + train_calcu_mask.shape),
-#    epochs=50
-#)
+# Mask calculate
+train_vocals_mag_irm = calculated_mask * train_mixture_mag
+train_vocals_irm = tf.i_stft(train_vocals_mag_irm, vocals_phase, win_size, hop)
+save_audio('{} using irm.wav'.format(model_case_2), train_vocals_irm, fs)
+
+model_2 = get_model_3(
+    input_shape=train_mixture_mag.shape,
+    model_case=model_case_2
+)
+model_2.compile(optimizer = 'adam',loss='binary_crossentropy' )
+model_2.fit(
+    x=train_mixture_mag.reshape((1, ) + train_mixture_mag.shape),
+    y=calculated_mask.reshape((1, ) + calculated_mask.shape),
+    epochs=50
+)
 #predicted_magn_1 = model_2.predict(x=test_mix_mag.reshape((1, ) + test_mix_mag.shape))
-#
-#predicted_mask_fnn = model_2.predict(x=test_mix_mag.reshape((1, ) + test_mix_mag.shape))
-#predicted_magn_2 = test_mix_mag * predicted_mask_fnn.squeeze(0)
-#predicted_audio_2 = tf.i_stft(predicted_magn_2, mix_phase, win_size, hop)
-#save_audio('test_audio.wav', predicted_audio_2, fs)
-###save files
-##save_audio('trai.wavn', all_other, fs)
+test_data = test_mixture_mag[0:len(train_mixture_mag)]
+predicted_mask_fnn = model_2.predict(x=test_data.reshape((1, ) + train_mixture_mag.shape))
+predicted_magn_2 = test_data * predicted_mask_fnn.squeeze(0)
+predicted_audio_2 = tf.i_stft(predicted_magn_2, mix_phase, win_size, hop)
+save_audio('test_audio.wav', predicted_audio_2, fs)
+##save files
+#save_audio('trai.wavn', all_other, fs)
 #sources = np.zeros((2, data_split), dtype=np.float32)
 #sources[0, :] = vocals[data_split:(data_split*2)]
 #sources[1, :] = all_other[data_split:(data_split*2)] 
-#
+
 #sdr, sir, sar = evaluate_results(
 #        targeted=sources,
 #        predicted=predicted_audio_2,
