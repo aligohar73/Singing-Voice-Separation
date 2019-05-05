@@ -1,3 +1,5 @@
 # Singing-Voice-Separation
-we are using IRM filter for calculating ideal mask and then giving that mask to neural netwrok
-as an output and stft feature as input.
+Main_1audio file is for separation of one audio file.
+Main_all_data file is for DSD100 dataset.
+bsseval.py file is for evaluation of results by calculating SIR,SDR and SAR ratios.
+tf_transform file containg the code for calculating stft and istft
