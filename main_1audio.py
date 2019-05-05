@@ -42,8 +42,8 @@ def get_model_3(input_shape, model_case):
     """
     model = Sequential()
     model.add(GRU(16,dropout=0.25,input_shape=input_shape, return_sequences=True)) 
-    model.add(GRU(16,dropout=0.25, return_sequences=True))
     #model.add(GRU(16,dropout=0.25, return_sequences=True))
+    model.add(GRU(16,dropout=0.25, return_sequences=True))
     model.add(TimeDistributed(Dense((input_shape[-1]))))
     model.add(Dense(100))
     model.add(Dense(513, activation = 'relu'))
